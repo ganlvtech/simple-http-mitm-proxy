@@ -58,6 +58,13 @@ function readStreamDataLimited(input: http.IncomingMessage, maxLen: number, call
   input.on('end', onEnd);
 }
 
+function fixHeadersContentLength(headers: {}, body: Buffer) {
+  headers['content-length'] = body.length.toString();
+  if ('transfer-encoding' in headers && headers['transfer-encoding'] === 'chunked') {
+    delete headers['transfer-encoding'];
+  }
+}
+
 export default class Server {
   public processRequest: Handler;
 
@@ -75,9 +82,13 @@ export default class Server {
 
   public decodeHTTPS: boolean;
 
-  public rootCAKey: pki.PrivateKey;
+  private rootCAKeyPem: string;
 
-  public rootCACert: pki.Certificate;
+  private rootCACertPem: string;
+
+  private rootCAKey: pki.PrivateKey;
+
+  private rootCACert: pki.Certificate;
 
   public sslKeys: { [hostname: string]: string };
 
@@ -111,6 +122,22 @@ export default class Server {
     return this.httpsServerListenPort;
   }
 
+  getRootCAKeyPem(): string {
+    return this.rootCAKeyPem;
+  }
+
+  getRootCACertPem(): string {
+    return this.rootCACertPem;
+  }
+
+  getRootCAKey(): pki.PrivateKey {
+    return this.rootCAKey;
+  }
+
+  getRootCACert(): pki.Certificate {
+    return this.rootCACert;
+  }
+
   constructor() {
     this.processRequest = defaultHandler;
     this.processResponse = defaultHandler;
@@ -133,6 +160,8 @@ export default class Server {
   }
 
   setRootCA(keyPem: string, certPem: string) {
+    this.rootCAKeyPem = keyPem;
+    this.rootCACertPem = certPem;
     this.rootCAKey = pki.privateKeyFromPem(keyPem);
     this.rootCACert = pki.certificateFromPem(certPem);
     this.sslCerts = {};
@@ -202,13 +231,13 @@ export default class Server {
           clientReq.destroy();
           clientRes.end();
         } else if (ctx1.processRequestResult === 'response') {
-          ctx1.response.headers['content-length'] = ctx1.response.body.length.toString();
+          fixHeadersContentLength(ctx1.response.headers, ctx1.response.body);
           clientRes.writeHead(ctx1.response.statusCode, ctx1.response.statusMessage, ctx1.response.headers);
           clientRes.write(ctx1.response.body);
           clientRes.end();
         } else if (ctx1.processRequestResult === 'responseProcess') {
           this.processResponse(ctx1, (ctx2) => {
-            ctx2.response.headers['content-length'] = ctx2.response.body.length.toString();
+            fixHeadersContentLength(ctx2.response.headers, ctx2.response.body);
             clientRes.writeHead(ctx2.response.statusCode, ctx2.response.statusMessage, ctx2.response.headers);
             clientRes.write(ctx2.response.body);
             clientRes.end();
@@ -216,7 +245,7 @@ export default class Server {
         } else {
           const hostURL = new URL(`${ctx1.request.protocol}://${ctx1.request.host}`);
           if (ctx1.request.isEnd) {
-            ctx1.request.headers['content-length'] = ctx1.request.body.length.toString();
+            fixHeadersContentLength(ctx1.request.headers, ctx1.request.body);
           }
           const request = ctx1.request.protocol === 'https' ? https.request : http.request;
           const serverReq = request({
@@ -237,7 +266,7 @@ export default class Server {
                 clientRes.end();
               } else if (ctx2.response.isEnd) {
                 serverRes.destroy();
-                ctx2.response.headers['content-length'] = ctx2.response.body.length.toString();
+                fixHeadersContentLength(ctx2.response.headers, ctx2.response.body);
                 clientRes.writeHead(ctx2.response.statusCode, ctx2.response.statusMessage, ctx2.response.headers);
                 clientRes.write(ctx2.response.body);
                 clientRes.end();
