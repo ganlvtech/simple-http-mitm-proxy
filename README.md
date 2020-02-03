@@ -127,8 +127,8 @@ You can use [node-web-proxy](https://www.npmjs.com/package/node-web-proxy) to se
 
 ## Related Projects
 
-[joeferner/node-http-mitm-proxy](https://github.com/joeferner/node-http-mitm-proxy): More powerful. Provide streaming and websocket proxy.
-[wuchangming/https-mitm-proxy-handbook](https://github.com/wuchangming/https-mitm-proxy-handbook): HTTPS proxy tutorial.
+* [joeferner/node-http-mitm-proxy](https://github.com/joeferner/node-http-mitm-proxy): More powerful. Provide streaming and websocket proxy.
+* [wuchangming/https-mitm-proxy-handbook](https://github.com/wuchangming/https-mitm-proxy-handbook): HTTPS proxy tutorial.
 
 ## License
 

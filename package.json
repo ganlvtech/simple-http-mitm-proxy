@@ -1,6 +1,6 @@
 {
   "name": "simple-http-mitm-proxy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple programmable http man in the middle proxy server",
   "main": "./lib/index.js",
   "scripts": {
