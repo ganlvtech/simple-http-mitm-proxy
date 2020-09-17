@@ -16,7 +16,7 @@
     "url": "git+https://github.com/ganlvtech/simple-http-mitm-proxy.git"
   },
   "dependencies": {
-    "node-forge": "^0.9.1"
+    "node-forge": "^0.10.0"
   },
   "devDependencies": {
     "@types/node-forge": "^0.9.1",
